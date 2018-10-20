@@ -3,4 +3,7 @@
 *.pdf
 *.sqlite
 *.csv
+investigate-a-dataset-template.ipynb
+__pycache__/
+'__pycache__ (1)'/
 

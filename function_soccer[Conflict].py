@@ -37,56 +37,17 @@ def db_work(goals_home_vs_away):
 #    print(goals_home_vs_away)
     return countries, goals_home_vs_away
 
+def fun_to_name(goals_home_vs_away, countries):
 
-
-def improved_teams(goals_home_vs_away, countries):
-
-    home_goals = goals_home_vs_away[['year', 'country_name','home_team','home_team_goal']]
+    home_away_goals = goals_home_vs_away[['year', 'country_name','home_team','home_team_goal']]
     away_goals = goals_home_vs_away[['year', 'country_name','away_team','away_team_goal']]
-    home_goals.rename(columns={'home_team' : 'team', 'home_team_goal' : 'total_goals'}, inplace = True)
+    home_away_goals.rename(columns={'home_team' : 'team', 'home_team_goal' : 'total_goals'}, inplace = True)
     away_goals.rename(columns={'away_team' : 'team', 'away_team_goal' : 'total_goals'}, inplace = True)
 #Before appending check shape
-    print("shape for home_away_goals: \n", home_goals.shape, " and away_goals: \n", away_goals.shape)
-    home_away_goals = home_goals.append(away_goals, ignore_index = True)
-#check shape after appending...
+    print("shape for home_away_goals: ", home_away_goals.shape, " and away_goals: ", away_goals.shape)
+    home_away_goals.append(away_goals)
+#check shape after appendinf...
     print("shape for home_away_goals after appending:", home_away_goals.shape)
-
-    home_away_goals_avg = home_away_goals.groupby(['year', 'country_name', 'team'], as_index = False).mean()
-    home_away_goals_avg.to_csv('./datasets/home_away_goals.csv')
-#choose 5 teams which have improved the most since 2008 until 2016
-    goals_ave_2008 = home_away_goals_avg.query('year == "2008"')
-    goals_ave_2016 = home_away_goals_avg.query('year == "2016"')
-    print('goals_ave_2008: ', goals_ave_2008.shape, 'goals_ave_2016: ', goals_ave_2016.shape)
-    goals_ave_2008_1016 = goals_ave_2008.merge(goals_ave_2016, left_on='team', right_on='team', how='inner')
-    goals_ave_2008_1016.rename(columns={'year_x': 'year', 'country_name_x' : 'country_name', 'total_goals_x' : 'total_goals_2008', 'total_goals_y' : 'total_goals_2016'}, inplace = True)
-
-#    goals_ave_2008_2016['ratio'] = goals_ave_2008_2016[]
-    print('goals_ave_2008_2016 shape : ', goals_ave_2008_1016.shape)
-    print('goals_ave_2008_2016 columns : ', goals_ave_2008_1016.columns)
-    goals_ave_2008_1016.drop(['year_y', 'country_name'], axis = 1, inplace=True )
-    print('goals_ave_2008_2016 columns : ', goals_ave_2008_1016.columns)
-    goals_ave_2008_1016['ratio'] =  goals_ave_2008_1016['total_goals_2016'] / goals_ave_2008_1016['total_goals_2008']
-    goals_ave_2008_1016.sort_values(by='ratio', ascending=False, inplace=True)
-    print('goals_ave_2008_2016 columns : ', goals_ave_2008_1016.columns)
-    goals_ave_2008_1016.to_csv('./datasets/goals_ave_2008_2016.csv')
-    year = goals_home_vs_away['year'].unique()
-    five_teams_best = goals_ave_2008_1016.iloc[:5,[1, 5]] #team name and ratio
-    print('five_teams_best ration: ', five_teams_best.columns)
-    print('year: ', year)
-    five_teams_best.to_csv('./datasets/five_teams_best.csv')
-    fig, ax = plt.subplots() #figsize=(25,15))
-    leg = []
-    for i in range(five_teams_best.shape[0]):
-        team = home_away_goals_avg.query('team == "{}"'.format(five_teams_best.iloc[i,0]))
-        team.sort_values(by='year')
-        ax.plot(team.iloc[:,0].apply(pd.to_numeric), team.iloc[:,3])
-        team.to_csv('./datasets/team.csv')
-        leg.append(team.iloc[0,2]+", " + team.iloc[0, 1])
-    plt.xlabel('year')
-    plt.ylabel('average number of home and away goals ')
-    plt.title('Best improved teams')
-    plt.legend(leg)
-    plt.show()
 
 
 
