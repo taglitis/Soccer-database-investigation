@@ -9,7 +9,6 @@ def db_work(goals_home_vs_away):
     database = path + "database_soccer.sqlite"
     conn = sqlite3.connect(database)
 
-
 # extract list of countries
     countries = pd.read_sql("""SELECT *
                                FROM Country;""", conn)
@@ -47,12 +46,68 @@ def append_home_away_goals(goals_home_vs_away):
     home_away_goals = home_goals.append(away_goals, ignore_index = True)
     return home_away_goals
 
+def goals_ave_compare(goals_home_vs_away):
+    years = ['2008', '2016']
+    bins_v = 20
+    bin_names = []
+    home_away_goals = append_home_away_goals(goals_home_vs_away)
+    home_away_goals.to_csv('./datasets/home_away_goals_1.csv')
+    #print('home_away_goals: ', home_away_goals)
+    i = 0
+    for year in years:
+        print('year: ', year)
+        home_away_goals_year = home_away_goals.query('year == "{}"'.format(year))
+        if i == 0:
+            min = home_away_goals_year.groupby('team', as_index = False).mean().total_goals.min()
+            max = home_away_goals_year.groupby('team', as_index = False).mean().total_goals.max()
+            print('min: ', min, 'max: ', max)
+        else:
+            min_new = home_away_goals_year.groupby('team', as_index = False).mean().total_goals.min()
+            max_new = home_away_goals_year.groupby('team', as_index = False).mean().total_goals.max()
+            if min_new < min: min = min_new
+            if max_new > max: max = max_new
+            print('min_new: ', min_new, 'max_new: ', max_new)
+
+        i += 1
+    print('min: ', min, 'max: ', max)
+    bin_edges = np.linspace(min-.00001, max+0.00001, bins_v)
+    delta = (bin_edges[1] - bin_edges[0]) / 2
+    locations = []
+    ind = []
+    width = delta/2
+    for i in range(bins_v-1):
+        locations.append(bin_edges[i] + delta)
+        #ind.append(bin_edges[i] + delta )
+    print('bin_edges', bin_edges, '\n  bin_edges len', len(bin_edges), '\n \n locations ', locations, '\n locations len', len(locations),  '\n delta: ', delta)
+    print('\n \n ind \n', ind)
+    fig, ax = plt.subplots(figsize=(8,6))
+    for year in years:
+        home_away_goals_local_ave = home_away_goals.query('year == "{}"'.format(year)).groupby('team').mean()
+#    home_away_goals_2008_ave = home_away_goals_2008.groupby('team').mean()
+        home_away_goals_local_ave['locations'] = pd.cut(home_away_goals_local_ave['total_goals'], bin_edges, labels = locations)
+        hist_data = home_away_goals_local_ave.groupby('locations', as_index=False).count()
+        hist_data['total_goals'] = hist_data['total_goals'] / hist_data['total_goals'].sum()
+        mean_v = format(home_away_goals_local_ave['total_goals'].mean(), ".2f")
+        label_v = year +', mean value: ' + str(mean_v)
+        plt.bar(locations, height = hist_data['total_goals'], alpha=0.7, width = width, label = label_v)
+        for i in range(bins_v-1):
+            locations[i] = locations[i] + width
+    label_v = []
+    for i in range(bins_v - 1):
+        print('i= ', i, 'locations[i]', locations[i])
+        locations[i] = locations[i] - 2*width
+        label_v.append(format(locations[i], '.2f'))
+        locations[i] = locations[i] + width / 2
+    print("locations: ", locations, "label_v", label_v)
+    plt.title('Comparison of probability distributions of goals mean values for {} and {}'.format(years[0], years[1]))
+    plt.xticks(locations, label_v)
+    plt.xlabel('average number of goals')
+    plt.legend()
+    plt.savefig('./plots/goals_ave_compare.png')
 
 def improved_teams(goals_home_vs_away, countries):
-
     home_away_goals = append_home_away_goals(goals_home_vs_away)
     print("shape for home_away_goals after appending:", home_away_goals.shape)
-
     home_away_goals_avg = home_away_goals.groupby(['year', 'country_name', 'team'], as_index = False).mean()
     home_away_goals_avg.to_csv('./datasets/home_away_goals.csv')
 #choose 5 teams which have improved the most since 2008 until 2016
@@ -61,8 +116,6 @@ def improved_teams(goals_home_vs_away, countries):
     print('goals_ave_2008: ', goals_ave_2008.shape, 'goals_ave_2016: ', goals_ave_2016.shape)
     goals_ave_2008_1016 = goals_ave_2008.merge(goals_ave_2016, left_on='team', right_on='team', how='inner')
     goals_ave_2008_1016.rename(columns={'year_x': 'year', 'country_name_x' : 'country_name', 'total_goals_x' : 'total_goals_2008', 'total_goals_y' : 'total_goals_2016'}, inplace = True)
-
-#    goals_ave_2008_2016['ratio'] = goals_ave_2008_2016[]
     print('goals_ave_2008_2016 shape : ', goals_ave_2008_1016.shape)
     print('goals_ave_2008_2016 columns : ', goals_ave_2008_1016.columns)
     goals_ave_2008_1016.drop(['year_y', 'country_name'], axis = 1, inplace=True )

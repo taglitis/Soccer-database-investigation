@@ -26,7 +26,7 @@ def main():
 #    fc.ave_goals_home_vs_away(goals_home_vs_away, countries)
 
     fc.improved_teams(goals_home_vs_away, countries)
-
+    fc.goals_ave_compare(goals_home_vs_away)
 
 
 if __name__ == "__main__":
