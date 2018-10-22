@@ -37,10 +37,7 @@ def db_work(goals_home_vs_away):
 #    print(goals_home_vs_away)
     return countries, goals_home_vs_away
 
-
-
-def improved_teams(goals_home_vs_away, countries):
-
+def append_home_away_goals(goals_home_vs_away):
     home_goals = goals_home_vs_away[['year', 'country_name','home_team','home_team_goal']]
     away_goals = goals_home_vs_away[['year', 'country_name','away_team','away_team_goal']]
     home_goals.rename(columns={'home_team' : 'team', 'home_team_goal' : 'total_goals'}, inplace = True)
@@ -48,7 +45,12 @@ def improved_teams(goals_home_vs_away, countries):
 #Before appending check shape
     print("shape for home_away_goals: \n", home_goals.shape, " and away_goals: \n", away_goals.shape)
     home_away_goals = home_goals.append(away_goals, ignore_index = True)
-#check shape after appending...
+    return home_away_goals
+
+
+def improved_teams(goals_home_vs_away, countries):
+
+    home_away_goals = append_home_away_goals(goals_home_vs_away)
     print("shape for home_away_goals after appending:", home_away_goals.shape)
 
     home_away_goals_avg = home_away_goals.groupby(['year', 'country_name', 'team'], as_index = False).mean()
@@ -86,7 +88,7 @@ def improved_teams(goals_home_vs_away, countries):
     plt.ylabel('average number of home and away goals ')
     plt.title('Best improved teams')
     plt.legend(leg)
-    plt.show()
+    plt.savefig('./plots/improved_teams.png')
 
 
 
