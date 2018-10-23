@@ -20,7 +20,9 @@ def db_work(goals_home_vs_away):
                                                         date AS full_date,
                                                         c.name AS country_name,
         	                                            home_team.team_long_name AS home_team,
+                                                        match.home_team_api_id AS home_id,
         	                                            away_team.team_long_name AS away_team,
+                                                        match.away_team_api_id AS away_id,
                         	                            home_team_goal,
                         	                            away_team_goal
                                         FROM match
