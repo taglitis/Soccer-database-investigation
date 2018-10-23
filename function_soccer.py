@@ -39,10 +39,10 @@ def db_work(goals_home_vs_away):
     return countries, goals_home_vs_away
 
 def append_home_away_goals(goals_home_vs_away):
-    home_goals = goals_home_vs_away[['year', 'country_name','home_team','home_team_goal']]
-    away_goals = goals_home_vs_away[['year', 'country_name','away_team','away_team_goal']]
-    home_goals.rename(columns={'home_team' : 'team', 'home_team_goal' : 'total_goals'}, inplace = True)
-    away_goals.rename(columns={'away_team' : 'team', 'away_team_goal' : 'total_goals'}, inplace = True)
+    home_goals = goals_home_vs_away[['year', 'country_name','home_team','home_team_goal', 'home_id']]
+    away_goals = goals_home_vs_away[['year', 'country_name','away_team','away_team_goal', 'away_id']]
+    home_goals.rename(columns={'home_team' : 'team', 'home_team_goal' : 'total_goals', 'home_id' : 'id'}, inplace = True)
+    away_goals.rename(columns={'away_team' : 'team', 'away_team_goal' : 'total_goals', 'away_id' : 'id'}, inplace = True)
 #Before appending check shape
     print("shape for home_away_goals: \n", home_goals.shape, " and away_goals: \n", away_goals.shape)
     home_away_goals = home_goals.append(away_goals, ignore_index = True)
