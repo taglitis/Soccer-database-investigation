@@ -38,6 +38,33 @@ def db_work(goals_home_vs_away):
 #    print(goals_home_vs_away)
     return countries, goals_home_vs_away
 
+
+
+
+def db_team_attributes():
+    path = "./input/"
+    database = path + "database_soccer.sqlite"
+    conn = sqlite3.connect(database)
+
+
+    team_attributes = pd.read_sql(""" SELECT STRFTIME('%Y', date) AS year,
+                                                date AS full_date,
+                                                team_api_id AS id,
+                                                buildupplayspeed AS play_speed,
+    											buildupplaydribbling AS play_gribbing,
+    											buildupplaypassing AS play_passing,
+    											chancecreationpassing AS chance_passing,
+    											chancecreationcrossing AS chance_crossing,
+    											chancecreationshooting AS chance_shooting,
+    											defencepressure AS defence_pressure,
+    											defenceaggression AS defence_affression,
+    											defenceteamwidth AS defence_width
+                                        FROM Team_Attributes """, conn)
+    team_attributes.dropna(inplace = True)
+    team_attributes.to_csv('./datasets/team_attributes.csv')
+
+    return team_attributes
+
 def append_home_away_goals(goals_home_vs_away):
     home_goals = goals_home_vs_away[['year', 'country_name','home_team','home_team_goal', 'home_id']]
     away_goals = goals_home_vs_away[['year', 'country_name','away_team','away_team_goal', 'away_id']]
