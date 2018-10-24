@@ -50,20 +50,36 @@ def db_team_attributes():
     team_attributes = pd.read_sql(""" SELECT STRFTIME('%Y', date) AS year,
                                                 date AS full_date,
                                                 team_api_id AS id,
-                                                buildupplayspeed AS play_speed,
-    											buildupplaydribbling AS play_gribbing,
-    											buildupplaypassing AS play_passing,
-    											chancecreationpassing AS chance_passing,
-    											chancecreationcrossing AS chance_crossing,
-    											chancecreationshooting AS chance_shooting,
-    											defencepressure AS defence_pressure,
-    											defenceaggression AS defence_affression,
-    											defenceteamwidth AS defence_width
+                                                buildupplayspeed AS speed,
+    											buildupplaydribbling AS gribbing,
+    											buildupplaypassing AS pl_passing,
+    											chancecreationpassing AS cr_passing,
+    											chancecreationcrossing AS crossing,
+    											chancecreationshooting AS shooting,
+    											defencepressure AS pressure,
+    											defenceaggression AS aggression,
+    											defenceteamwidth AS width
                                         FROM Team_Attributes """, conn)
     team_attributes.dropna(inplace = True)
     team_attributes.to_csv('./datasets/team_attributes.csv')
 
     return team_attributes
+
+def team_attributes_compare(goals_home_vs_away):
+    team_attributes = db_team_attributes()
+    home_away_goals = append_home_away_goals(goals_home_vs_away)
+
+    team_attributes_ave = team_attributes.groupby(['year', 'id'], as_index=False).mean()
+    home_away_goals_ave = home_away_goals.groupby(['year','id', 'team'], as_index=False).sum()
+    team_attributes_goals_ave= home_away_goals_ave.merge(team_attributes_ave, left_on='id', right_on='id', how='inner')
+#    print(team_attributes_goals_ave)
+    fig, ax1 = plt.subplots()
+    pd.plotting.scatter_matrix(team_attributes_goals_ave.drop(columns = 'id'))
+#    fig.set_size_inches(500, 500)
+    #plt.yticks(rotation = 'horizontal')
+    plt.savefig('./plots/mattix.png', dpi=600)
+    #because of the pure quality when save
+    plt.show()
 
 def append_home_away_goals(goals_home_vs_away):
     home_goals = goals_home_vs_away[['year', 'country_name','home_team','home_team_goal', 'home_id']]
@@ -176,6 +192,7 @@ def improved_teams(goals_home_vs_away, countries):
 
 def ave_goals_home_vs_away(goals_home_vs_away, countries):
 #solving encoding problem: UnicodeEncodeError: 'charmap' codec can't encode character '\xf6' in position 56: character maps to <undefined>
+    goals_home_vs_away.drop(['home_id', 'away_id'], axis = 1, inplace = True)
     home_team_goal_avg = goals_home_vs_away[['year', 'country_name','home_team','home_team_goal']].groupby(['year', 'country_name','home_team'], as_index=False)['home_team_goal'].mean()
     away_team_goal_avg = goals_home_vs_away[['year','country_name','away_team','away_team_goal']].groupby(['year','country_name','away_team'], as_index=False)['away_team_goal'].mean()
     goals_home_away_avg = home_team_goal_avg.merge(away_team_goal_avg, left_on='home_team', right_on='away_team', how='inner')
