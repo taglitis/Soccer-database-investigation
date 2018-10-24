@@ -65,6 +65,16 @@ def db_team_attributes():
 
     return team_attributes
 
+def append_home_away_goals(goals_home_vs_away):
+    home_goals = goals_home_vs_away[['year', 'country_name','home_team','home_team_goal', 'home_id']]
+    away_goals = goals_home_vs_away[['year', 'country_name','away_team','away_team_goal', 'away_id']]
+    home_goals.rename(columns={'home_team' : 'team', 'home_team_goal' : 'total_goals', 'home_id' : 'id'}, inplace = True)
+    away_goals.rename(columns={'away_team' : 'team', 'away_team_goal' : 'total_goals', 'away_id' : 'id'}, inplace = True)
+#Before appending check shape
+    print("shape for home_away_goals: \n", home_goals.shape, " and away_goals: \n", away_goals.shape)
+    home_away_goals = home_goals.append(away_goals, ignore_index = True)
+    return home_away_goals
+
 def team_attributes_compare(goals_home_vs_away):
     team_attributes = db_team_attributes()
     home_away_goals = append_home_away_goals(goals_home_vs_away)
@@ -79,17 +89,35 @@ def team_attributes_compare(goals_home_vs_away):
     #plt.yticks(rotation = 'horizontal')
     plt.savefig('./plots/mattix.png', dpi=600)
     #because of the pure quality when save
+    #plt.show()
+    fig.clf()
+    #plot 3 scatter plot from matrix
+    plt.subplot(3,1,1)
+    plt.scatter(team_attributes_goals_ave['pl_passing'], team_attributes_goals_ave['total_goals'])
+    corr = np.corrcoef(team_attributes_goals_ave['pl_passing'], team_attributes_goals_ave['total_goals'])
+    plt.text(70,103, "correlation coef: " + format(corr[0,1], ".2f"))
+    plt.title('Relationship between parameter Build up Play passing and number of goals')
+    plt.xlabel('Build up Play passing')
+    plt.ylabel('Number of goals')
+    plt.subplot(3,1,2)
+
+    plt.scatter(team_attributes_goals_ave['pressure'], team_attributes_goals_ave['total_goals'])
+    corr = np.corrcoef(team_attributes_goals_ave['pressure'], team_attributes_goals_ave['total_goals'])
+    plt.text(64,115, "correlation coef: " + format(corr[0,1], ".2f"))
+    plt.title('Relationship between parameter Defence pressure and number of goals')
+    plt.xlabel('Defence pressure')
+    plt.ylabel('Number of goals')
+
+    plt.subplot(3,1,3)
+    plt.scatter(team_attributes_goals_ave['pressure'], team_attributes_goals_ave['aggression'])
+    corr = np.corrcoef(team_attributes_goals_ave['pressure'], team_attributes_goals_ave['aggression'])
+    plt.text(66,69, "correlation coef: " + format(corr[0,1], ".2f"))
+    plt.title('Relationship between parameter Defence pressure and Defence aggression')
+    plt.xlabel('Defence pressure')
+    plt.ylabel('Defence aggression')
+    plt.tight_layout()
     plt.show()
 
-def append_home_away_goals(goals_home_vs_away):
-    home_goals = goals_home_vs_away[['year', 'country_name','home_team','home_team_goal', 'home_id']]
-    away_goals = goals_home_vs_away[['year', 'country_name','away_team','away_team_goal', 'away_id']]
-    home_goals.rename(columns={'home_team' : 'team', 'home_team_goal' : 'total_goals', 'home_id' : 'id'}, inplace = True)
-    away_goals.rename(columns={'away_team' : 'team', 'away_team_goal' : 'total_goals', 'away_id' : 'id'}, inplace = True)
-#Before appending check shape
-    print("shape for home_away_goals: \n", home_goals.shape, " and away_goals: \n", away_goals.shape)
-    home_away_goals = home_goals.append(away_goals, ignore_index = True)
-    return home_away_goals
 
 def goals_ave_compare(goals_home_vs_away):
     years = ['2008', '2016']
@@ -149,6 +177,7 @@ def goals_ave_compare(goals_home_vs_away):
     plt.xlabel('average number of goals')
     plt.legend()
     plt.savefig('./plots/goals_ave_compare.png')
+    fig.clf()
 
 def improved_teams(goals_home_vs_away, countries):
     home_away_goals = append_home_away_goals(goals_home_vs_away)
@@ -187,6 +216,7 @@ def improved_teams(goals_home_vs_away, countries):
     plt.title('Best improved teams')
     plt.legend(leg)
     plt.savefig('./plots/improved_teams.png')
+    fig.clf()
 
 
 
