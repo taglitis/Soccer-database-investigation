@@ -19,7 +19,6 @@ def db_work():
     countries = pd.read_sql("""SELECT *
                                FROM Country;""", conn)
     countries.drop(['id'], axis = 1, inplace = True)
-    print('List of countries', countries, "\n")
 
 # get country with its team and goals, away country with goals
     goals_home_vs_away = pd.read_sql("""SELECT DISTINCT STRFTIME('%Y', date) AS year,
@@ -93,8 +92,6 @@ def append_home_away_goals(goals_home_vs_away):
     away_goals = goals_home_vs_away[['year', 'country_name','away_team','away_team_goal', 'away_id']]
     home_goals.rename(columns={'home_team' : 'team', 'home_team_goal' : 'total_goals', 'home_id' : 'id'}, inplace = True)
     away_goals.rename(columns={'away_team' : 'team', 'away_team_goal' : 'total_goals', 'away_id' : 'id'}, inplace = True)
-#Before appending check shape
-    print("shape for home_away_goals: \n", home_goals.shape, " and away_goals: \n", away_goals.shape)
     home_away_goals = home_goals.append(away_goals, ignore_index = True)
     return home_away_goals
 
@@ -114,14 +111,9 @@ def team_attributes_compare(goals_home_vs_away):
     team_attributes_ave = team_attributes.groupby(['year', 'id'], as_index=False).mean()
     home_away_goals_ave = home_away_goals.groupby(['year','id', 'team'], as_index=False).sum()
     team_attributes_goals_ave= home_away_goals_ave.merge(team_attributes_ave, left_on='id', right_on='id', how='inner')
-#    print(team_attributes_goals_ave)
     fig, ax1 = plt.subplots()
     pd.plotting.scatter_matrix(team_attributes_goals_ave.drop(columns = 'id'))
-#    fig.set_size_inches(500, 500)
-    #plt.yticks(rotation = 'horizontal')
     plt.savefig('./plots/mattix.png', dpi=600)
-    #because of the pure quality when save
-    #plt.show()
     fig.clf()
     #plot 3 scatter plot from matrix
     plt.subplot(3,1,1)
@@ -167,24 +159,19 @@ def goals_ave_compare(goals_home_vs_away):
     bin_names = []
     home_away_goals = append_home_away_goals(goals_home_vs_away)
     home_away_goals.to_csv('./datasets/home_away_goals_1.csv')
-    #print('home_away_goals: ', home_away_goals)
     i = 0
     for year in years:
-        print('year: ', year)
         home_away_goals_year = home_away_goals.query('year == "{}"'.format(year))
         if i == 0:
             min = home_away_goals_year.groupby('team', as_index = False).mean().total_goals.min()
             max = home_away_goals_year.groupby('team', as_index = False).mean().total_goals.max()
-            print('min: ', min, 'max: ', max)
         else:
             min_new = home_away_goals_year.groupby('team', as_index = False).mean().total_goals.min()
             max_new = home_away_goals_year.groupby('team', as_index = False).mean().total_goals.max()
             if min_new < min: min = min_new
             if max_new > max: max = max_new
-            print('min_new: ', min_new, 'max_new: ', max_new)
 
         i += 1
-    print('min: ', min, 'max: ', max)
     bin_edges = np.linspace(min-.00001, max+0.00001, bins_v)
     delta = (bin_edges[1] - bin_edges[0]) / 2
     locations = []
@@ -193,8 +180,6 @@ def goals_ave_compare(goals_home_vs_away):
     for i in range(bins_v-1):
         locations.append(bin_edges[i] + delta)
         #ind.append(bin_edges[i] + delta )
-    print('bin_edges', bin_edges, '\n  bin_edges len', len(bin_edges), '\n \n locations ', locations, '\n locations len', len(locations),  '\n delta: ', delta)
-    print('\n \n ind \n', ind)
     fig, ax = plt.subplots(figsize=(8,6))
     for year in years:
         home_away_goals_local_ave = home_away_goals.query('year == "{}"'.format(year)).groupby('team').mean()
@@ -209,11 +194,9 @@ def goals_ave_compare(goals_home_vs_away):
             locations[i] = locations[i] + width
     label_v = []
     for i in range(bins_v - 1):
-        print('i= ', i, 'locations[i]', locations[i])
         locations[i] = locations[i] - 2*width
         label_v.append(format(locations[i], '.2f'))
         locations[i] = locations[i] + width / 2
-    print("locations: ", locations, "label_v", label_v)
     plt.title('Comparison of probability distributions of goals mean values for {} and {}'.format(years[0], years[1]))
     plt.xticks(locations, label_v)
     plt.xlabel('average number of goals')
@@ -233,27 +216,19 @@ def improved_teams(goals_home_vs_away):
     """
 
     home_away_goals = append_home_away_goals(goals_home_vs_away)
-    print("shape for home_away_goals after appending:", home_away_goals.shape)
     home_away_goals_avg = home_away_goals.groupby(['year', 'country_name', 'team'], as_index = False).mean()
     home_away_goals_avg.to_csv('./datasets/home_away_goals.csv')
 #choose 5 teams which have improved the most since 2008 until 2016
     goals_ave_2008 = home_away_goals_avg.query('year == "2008"')
     goals_ave_2016 = home_away_goals_avg.query('year == "2016"')
-    print('goals_ave_2008: ', goals_ave_2008.shape, 'goals_ave_2016: ', goals_ave_2016.shape)
     goals_ave_2008_1016 = goals_ave_2008.merge(goals_ave_2016, left_on='team', right_on='team', how='inner')
     goals_ave_2008_1016.rename(columns={'year_x': 'year', 'country_name_x' : 'country_name', 'total_goals_x' : 'total_goals_2008', 'total_goals_y' : 'total_goals_2016'}, inplace = True)
-    print('goals_ave_2008_2016 shape : ', goals_ave_2008_1016.shape)
-    print('goals_ave_2008_2016 columns : ', goals_ave_2008_1016.columns)
     goals_ave_2008_1016.drop(['year_y', 'country_name'], axis = 1, inplace=True )
-    print('goals_ave_2008_2016 columns : ', goals_ave_2008_1016.columns)
     goals_ave_2008_1016['ratio'] =  goals_ave_2008_1016['total_goals_2016'] / goals_ave_2008_1016['total_goals_2008']
     goals_ave_2008_1016.sort_values(by='ratio', ascending=False, inplace=True)
-    print('goals_ave_2008_2016 columns : ', goals_ave_2008_1016.columns)
     goals_ave_2008_1016.to_csv('./datasets/goals_ave_2008_2016.csv')
     year = goals_home_vs_away['year'].unique()
     five_teams_best = goals_ave_2008_1016.iloc[:5,[1, 5]] #team name and ratio
-    print('five_teams_best ration: ', five_teams_best.columns)
-    print('year: ', year)
     five_teams_best.to_csv('./datasets/five_teams_best.csv')
     fig, ax = plt.subplots() #figsize=(25,15))
     leg = []
@@ -278,7 +253,7 @@ def ave_goals_home_vs_away(countries, goals_home_vs_away):
     INPUT:
     countries, goals_home_vs_away
 
-    OUTPUT: 
+    OUTPUT:
     bat charts for teams for each country
     """
 
@@ -291,19 +266,15 @@ def ave_goals_home_vs_away(countries, goals_home_vs_away):
     home_team_goal_avg.to_csv('./datasets/home_teams_avg.csv')
     away_team_goal_avg.to_csv('./datasets/away_teams_avg.csv')
     goals_home_away_avg.to_csv('./datasets/goals_home_aways_avg.csv')
-    print(home_team_goal_avg.head())
-    print('******* \n', goals_home_vs_away.head())
 
     path = "./plots/"
     for country in countries.loc[:,'name']:
-        print(country)
 
         avg_goals_country =  goals_home_away_avg[goals_home_away_avg['country_name'] == country]
         plt.subplots(figsize=(25,15))
         total = avg_goals_country['goals_at_home'].sum() + avg_goals_country['goals_away'].sum()
         avg_goals_country.loc[:,'goals_at_home'] = avg_goals_country.loc[:,'goals_at_home'] / total
         avg_goals_country.loc[:,'goals_away'] = avg_goals_country.loc[:,'goals_away'] / total
-#        print(avg_goals_country)
         ind = np.arange(avg_goals_country.shape[0]) # x location for teams (home and away goals)
         width = 0.35
         home_goals = plt.bar(ind, avg_goals_country['goals_at_home'], width, color = 'b', alpha=0.7, label='goals at home')
