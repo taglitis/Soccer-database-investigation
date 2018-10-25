@@ -4,7 +4,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def db_work(goals_home_vs_away):
+def db_work():
+    """
+    extracts datasets from DB
+
+    OUTPUT:
+
+    """
     path = "./input/"
     database = path + "database_soccer.sqlite"
     conn = sqlite3.connect(database)
@@ -35,13 +41,20 @@ def db_work(goals_home_vs_away):
                                         LEFT JOIN team AS away_team
                                           ON away_team.team_api_id = match.away_team_api_id
                                         ORDER BY 1  """, conn)
-#    print(goals_home_vs_away)
     return countries, goals_home_vs_away
 
 
 
 
 def db_team_attributes():
+    """
+    compare team team_attributes
+
+
+    OUTPUT:
+    scatter plots
+    """
+
     path = "./input/"
     database = path + "database_soccer.sqlite"
     conn = sqlite3.connect(database)
@@ -66,6 +79,16 @@ def db_team_attributes():
     return team_attributes
 
 def append_home_away_goals(goals_home_vs_away):
+    """
+    appends away dataset to home datasets
+
+    INPUT:
+    goals_home_vs_away datasets
+
+    OUTPUT:
+    home_away_goals - appended dataset
+
+    """
     home_goals = goals_home_vs_away[['year', 'country_name','home_team','home_team_goal', 'home_id']]
     away_goals = goals_home_vs_away[['year', 'country_name','away_team','away_team_goal', 'away_id']]
     home_goals.rename(columns={'home_team' : 'team', 'home_team_goal' : 'total_goals', 'home_id' : 'id'}, inplace = True)
@@ -76,6 +99,15 @@ def append_home_away_goals(goals_home_vs_away):
     return home_away_goals
 
 def team_attributes_compare(goals_home_vs_away):
+    """
+    compares team team_attributes
+
+    INPUT:
+    goals_home_vs_away - dataset
+
+    OUTPUT:
+    scatter plots with team attributes
+    """
     team_attributes = db_team_attributes()
     home_away_goals = append_home_away_goals(goals_home_vs_away)
 
@@ -120,6 +152,16 @@ def team_attributes_compare(goals_home_vs_away):
 
 
 def goals_ave_compare(goals_home_vs_away):
+    """
+    compares average number of team goals for 2 years
+
+    INPUT:
+    goals_home_vs_away - dataset
+
+    OUTPUT:
+    bar graph
+    """
+
     years = ['2008', '2016']
     bins_v = 20
     bin_names = []
@@ -179,7 +221,17 @@ def goals_ave_compare(goals_home_vs_away):
     plt.savefig('./plots/goals_ave_compare.png')
     fig.clf()
 
-def improved_teams(goals_home_vs_away, countries):
+def improved_teams(goals_home_vs_away):
+    """
+    defines 5 teams which improved the most since 2008
+
+    INPUT:
+    goals_home_vs_away -datasets
+
+    OUTPUT:
+    line plot with 5 the most improved teams
+    """
+
     home_away_goals = append_home_away_goals(goals_home_vs_away)
     print("shape for home_away_goals after appending:", home_away_goals.shape)
     home_away_goals_avg = home_away_goals.groupby(['year', 'country_name', 'team'], as_index = False).mean()
@@ -219,12 +271,20 @@ def improved_teams(goals_home_vs_away, countries):
     fig.clf()
 
 
+def ave_goals_home_vs_away(countries, goals_home_vs_away):
+    """
+    comparison of goals when teap plays at home vs aways
 
-def ave_goals_home_vs_away(goals_home_vs_away, countries):
+    INPUT:
+    countries, goals_home_vs_away
+
+    OUTPUT: 
+    bat charts for teams for each country
+    """
+
 #solving encoding problem: UnicodeEncodeError: 'charmap' codec can't encode character '\xf6' in position 56: character maps to <undefined>
-    goals_home_vs_away.drop(['home_id', 'away_id'], axis = 1, inplace = True)
-    home_team_goal_avg = goals_home_vs_away[['year', 'country_name','home_team','home_team_goal']].groupby(['year', 'country_name','home_team'], as_index=False)['home_team_goal'].mean()
-    away_team_goal_avg = goals_home_vs_away[['year','country_name','away_team','away_team_goal']].groupby(['year','country_name','away_team'], as_index=False)['away_team_goal'].mean()
+    home_team_goal_avg = goals_home_vs_away[['country_name','home_team','home_team_goal']].groupby(['country_name','home_team'], as_index=False)['home_team_goal'].mean()
+    away_team_goal_avg = goals_home_vs_away[['country_name','away_team','away_team_goal']].groupby(['country_name','away_team'], as_index=False)['away_team_goal'].mean()
     goals_home_away_avg = home_team_goal_avg.merge(away_team_goal_avg, left_on='home_team', right_on='away_team', how='inner')
     goals_home_away_avg.rename(columns={'country_name_x' : 'country_name', 'home_team' : 'team_name', 'home_team_goal' : 'goals_at_home', 'away_team_goal':'goals_away'}, inplace = True)
     goals_home_away_avg.drop(['away_team','country_name_y'], axis = 1, inplace=True)

@@ -20,13 +20,13 @@ import function_soccer as fc
 
 def main():
     path_goals_home_vs_away = './datasets/goals_home_vs_away.csv'
-    countries, goals_home_vs_away = fc.db_work(path_goals_home_vs_away) #obtain data sets from DB
+    countries, goals_home_vs_away = fc.db_work() #obtain data sets from DB
     #find averages for when teams play home and aways
 #    print(goals_home_vs_away)
-#    fc.ave_goals_home_vs_away(goals_home_vs_away, countries)
-
-    fc.improved_teams(goals_home_vs_away, countries)
+    fc.team_attributes_compare(goals_home_vs_away)
+    fc.improved_teams(goals_home_vs_away)
     fc.goals_ave_compare(goals_home_vs_away)
+    fc.ave_goals_home_vs_away(countries, goals_home_vs_away)
 
 
 if __name__ == "__main__":
