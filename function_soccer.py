@@ -40,6 +40,21 @@ def db_work():
                                         LEFT JOIN team AS away_team
                                           ON away_team.team_api_id = match.away_team_api_id
                                         ORDER BY 1  """, conn)
+
+    #countries dataset is short, check it manually
+    print('countires: ', countries)
+
+    #clean goals_home_vs_away if needed
+    #check for NaN in datasets
+    print("\n number of null values in goals_home_vs_away dataset: ", goals_home_vs_away.isnull().sum().sum())
+    #drop lines with NaN values
+    goals_home_vs_away.dropna(inplace = True)
+    #check for duplicated lines
+    print("duplicated rows for team attirbutes:", goals_home_vs_away.duplicated(keep='first').sum())
+    goals_home_vs_away.drop_duplicates(keep='first', inplace = True)
+    #save database to review data manually
+    goals_home_vs_away.to_csv('./datasets/goals_home_vs_away.csv')
+
     return countries, goals_home_vs_away
 
 
@@ -79,6 +94,7 @@ def db_team_attributes():
     #check for duplicated lines
     print("duplicated rows for team attirbutes:", team_attributes.duplicated(keep='first').sum())
     team_attributes.drop_duplicates(keep='first', inplace = True)
+    #save database to review data manually
     team_attributes.to_csv('./datasets/team_attributes.csv')
 
 
