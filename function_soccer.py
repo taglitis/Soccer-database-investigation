@@ -47,10 +47,10 @@ def db_work():
 
 def db_team_attributes():
     """
-    compare team team_attributes
+    from DB extract team attributes
 
 
-    OUTPUT:
+    OUTPU:
     scatter plots
     """
 
@@ -107,10 +107,13 @@ def team_attributes_compare(goals_home_vs_away):
     """
     team_attributes = db_team_attributes()
     home_away_goals = append_home_away_goals(goals_home_vs_away)
-
+    #group by year and id and find means of team attributes
     team_attributes_ave = team_attributes.groupby(['year', 'id'], as_index=False).mean()
+    #find the total number of goals for each team
     home_away_goals_ave = home_away_goals.groupby(['year','id', 'team'], as_index=False).sum()
+    #merge goals and attributes
     team_attributes_goals_ave= home_away_goals_ave.merge(team_attributes_ave, left_on='id', right_on='id', how='inner')
+    #plot it
     fig, ax1 = plt.subplots()
     pd.plotting.scatter_matrix(team_attributes_goals_ave.drop(columns = 'id'))
     plt.savefig('./plots/mattix.png', dpi=600)
@@ -160,6 +163,7 @@ def goals_ave_compare(goals_home_vs_away):
     home_away_goals = append_home_away_goals(goals_home_vs_away)
     home_away_goals.to_csv('./datasets/home_away_goals_1.csv')
     i = 0
+    #intervals might not match, so define min and max values for 2 different years
     for year in years:
         home_away_goals_year = home_away_goals.query('year == "{}"'.format(year))
         if i == 0:
@@ -172,18 +176,21 @@ def goals_ave_compare(goals_home_vs_away):
             if max_new > max: max = max_new
 
         i += 1
+    #define edges
     bin_edges = np.linspace(min-.00001, max+0.00001, bins_v)
+    #the middle of each interval
     delta = (bin_edges[1] - bin_edges[0]) / 2
+    #declare a lost of locations
     locations = []
-    ind = []
+    #width of a bar
     width = delta/2
+    #define each location
     for i in range(bins_v-1):
         locations.append(bin_edges[i] + delta)
-        #ind.append(bin_edges[i] + delta )
+    #create a plot
     fig, ax = plt.subplots(figsize=(8,6))
     for year in years:
         home_away_goals_local_ave = home_away_goals.query('year == "{}"'.format(year)).groupby('team').mean()
-#    home_away_goals_2008_ave = home_away_goals_2008.groupby('team').mean()
         home_away_goals_local_ave['locations'] = pd.cut(home_away_goals_local_ave['total_goals'], bin_edges, labels = locations)
         hist_data = home_away_goals_local_ave.groupby('locations', as_index=False).count()
         hist_data['total_goals'] = hist_data['total_goals'] / hist_data['total_goals'].sum()
@@ -257,7 +264,6 @@ def ave_goals_home_vs_away(countries, goals_home_vs_away):
     bat charts for teams for each country
     """
 
-#solving encoding problem: UnicodeEncodeError: 'charmap' codec can't encode character '\xf6' in position 56: character maps to <undefined>
     home_team_goal_avg = goals_home_vs_away[['country_name','home_team','home_team_goal']].groupby(['country_name','home_team'], as_index=False)['home_team_goal'].mean()
     away_team_goal_avg = goals_home_vs_away[['country_name','away_team','away_team_goal']].groupby(['country_name','away_team'], as_index=False)['away_team_goal'].mean()
     goals_home_away_avg = home_team_goal_avg.merge(away_team_goal_avg, left_on='home_team', right_on='away_team', how='inner')
