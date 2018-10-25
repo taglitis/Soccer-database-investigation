@@ -72,8 +72,15 @@ def db_team_attributes():
     											defenceaggression AS aggression,
     											defenceteamwidth AS width
                                         FROM Team_Attributes """, conn)
+    #check for NaN in datasets
+    print("\n number of null values in team_attributes dataset: ", team_attributes.isnull().sum().sum())
+    #drop lines with NaN values
     team_attributes.dropna(inplace = True)
+    #check for duplicated lines
+    print("duplicated rows for team attirbutes:", team_attributes.duplicated(keep='first').sum())
+    team_attributes.drop_duplicates(keep='first', inplace = True)
     team_attributes.to_csv('./datasets/team_attributes.csv')
+
 
     return team_attributes
 
