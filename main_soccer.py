@@ -19,7 +19,6 @@ import function_soccer as fc
 
 
 def main():
-    path_goals_home_vs_away = './datasets/goals_home_vs_away.csv'
     countries, goals_home_vs_away = fc.db_work() #obtain data sets from DB
     #find averages for when teams play home and aways
 #    print(goals_home_vs_away)

@@ -12,7 +12,7 @@ def db_work():
 
     """
     path = "./input/"
-    database = path + "database_soccer.sqlite"
+    database = "database_soccer.sqlite"
     conn = sqlite3.connect(database)
 
 # extract list of countries
@@ -70,7 +70,7 @@ def db_team_attributes():
     """
 
     path = "./input/"
-    database = path + "database_soccer.sqlite"
+    database = "database_soccer.sqlite"
     conn = sqlite3.connect(database)
 
 
@@ -137,10 +137,9 @@ def team_attributes_compare(goals_home_vs_away):
     #merge goals and attributes
     team_attributes_goals_ave= home_away_goals_ave.merge(team_attributes_ave, left_on='id', right_on='id', how='inner')
     #plot it
-    fig, ax1 = plt.subplots()
     pd.plotting.scatter_matrix(team_attributes_goals_ave.drop(columns = 'id'))
     plt.savefig('./plots/mattix.png', dpi=600)
-    fig.clf()
+    plt.clf()
     #plot 3 scatter plot from matrix
     plt.subplot(3,1,1)
     plt.scatter(team_attributes_goals_ave['pl_passing'], team_attributes_goals_ave['total_goals'])
@@ -278,7 +277,7 @@ def improved_teams(goals_home_vs_away):
 
 def ave_goals_home_vs_away(countries, goals_home_vs_away):
     """
-    comparison of goals when teap plays at home vs aways
+    comparison of goals when team plays at home vs aways
 
     INPUT:
     countries, goals_home_vs_away
