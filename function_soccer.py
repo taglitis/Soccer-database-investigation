@@ -130,21 +130,27 @@ def team_attributes_compare(goals_home_vs_away):
     """
     team_attributes = db_team_attributes()
     home_away_goals = append_home_away_goals(goals_home_vs_away)
+    print("**************home_away_goals: ", home_away_goals.columns)
     #group by year and id and find means of team attributes
-    team_attributes_ave = team_attributes.groupby(['year', 'id'], as_index=False).mean()
+    team_attributes_goals = home_away_goals.merge(team_attributes, left_on='id', right_on='id', how='inner').query("year_x == year_y")
+    team_attributes_goals.to_csv('./datasets/team_attributes_goals.csv')
+#    print("**************team_attributes_goals_ave: ", team_attributes_goals_ave.columns)
+    team_attributes_goals_ave = team_attributes_goals.groupby(['year_x', 'id'], as_index=False).mean()
     #find the total number of goals for each team
-    home_away_goals_ave = home_away_goals.groupby(['year','id', 'team'], as_index=False).sum()
+#    home_away_goals_ave = home_away_goals.groupby(['year','id', ], as_index=False).total_goals.sum()
     #merge goals and attributes
-    team_attributes_goals_ave= home_away_goals_ave.merge(team_attributes_ave, left_on='id', right_on='id', how='inner')
+#    team_attributes_goals_ave= home_away_goals_ave.merge(team_attributes_ave, left_on='id', right_on='id', how='inner').query("year_x == year_y")
+
+    team_attributes_goals_ave.to_csv('./datasets/team_attributes_goals_ave4.csv')
     #plot it
-    pd.plotting.scatter_matrix(team_attributes_goals_ave.drop(columns = 'id'))
+    plt.show()
     plt.savefig('./plots/mattix.png', dpi=600)
     plt.clf()
     #plot 3 scatter plot from matrix
     plt.subplot(3,1,1)
     plt.scatter(team_attributes_goals_ave['pl_passing'], team_attributes_goals_ave['total_goals'])
     corr = np.corrcoef(team_attributes_goals_ave['pl_passing'], team_attributes_goals_ave['total_goals'])
-    plt.text(70,103, "correlation coef: " + format(corr[0,1], ".2f"))
+    plt.text(70,2.78, "correlation coef: " + format(corr[0,1], ".2f"))
     plt.title('Relationship between parameter Build up Play passing and number of goals')
     plt.xlabel('Build up Play passing')
     plt.ylabel('Number of goals')
@@ -152,7 +158,7 @@ def team_attributes_compare(goals_home_vs_away):
 
     plt.scatter(team_attributes_goals_ave['pressure'], team_attributes_goals_ave['total_goals'])
     corr = np.corrcoef(team_attributes_goals_ave['pressure'], team_attributes_goals_ave['total_goals'])
-    plt.text(64,115, "correlation coef: " + format(corr[0,1], ".2f"))
+    plt.text(67,2.63, "correlation coef: " + format(corr[0,1], ".2f"))
     plt.title('Relationship between parameter Defence pressure and number of goals')
     plt.xlabel('Defence pressure')
     plt.ylabel('Number of goals')
@@ -296,6 +302,7 @@ def ave_goals_home_vs_away(countries, goals_home_vs_away):
     goals_home_away_avg.to_csv('./datasets/goals_home_aways_avg.csv')
 
     path = "./plots/"
+    i = 0
     for country in countries.loc[:,'name']:
 
         avg_goals_country =  goals_home_away_avg[goals_home_away_avg['country_name'] == country]
@@ -303,6 +310,11 @@ def ave_goals_home_vs_away(countries, goals_home_vs_away):
         total = avg_goals_country['goals_at_home'].sum() + avg_goals_country['goals_away'].sum()
         avg_goals_country.loc[:,'goals_at_home'] = avg_goals_country.loc[:,'goals_at_home'] / total
         avg_goals_country.loc[:,'goals_away'] = avg_goals_country.loc[:,'goals_away'] / total
+        if i == 0:
+            avg_goals_country_appended = avg_goals_country
+            i += 1
+        else:
+            avg_goals_country_appended = avg_goals_country_appended.append(avg_goals_country, ignore_index = True)
         ind = np.arange(avg_goals_country.shape[0]) # x location for teams (home and away goals)
         width = 0.35
         home_goals = plt.bar(ind, avg_goals_country['goals_at_home'], width, color = 'b', alpha=0.7, label='goals at home')
@@ -313,3 +325,4 @@ def ave_goals_home_vs_away(countries, goals_home_vs_away):
         plt.xlabel('Team name')
         plt.legend(handles=[home_goals, away_goals])
         plt.savefig(path+"goals_home_away_"+country+".png")
+        avg_goals_country_appended.to_csv('./datasets/avg_goals_country_appended.csv')
